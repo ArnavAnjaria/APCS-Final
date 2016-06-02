@@ -1,0 +1,317 @@
+package pongGame;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+public class PongArea extends JPanel implements ActionListener, KeyListener, MouseListener, Runnable {
+
+	String direction = "";
+	private boolean[] keys;
+	private boolean canMove = true;
+	private int score1 = 0;
+	private int score2 = 0;
+	private int randomWidth;
+	private int randomHeight;
+	private Paddle player1;
+	private Paddle player2;
+	private Ball ball;
+	private boolean title;
+	private boolean win;
+	private int winner;
+	private boolean reset;
+
+	// things that happen at the beginning of the game
+	public PongArea(JFrame f) {
+		player1 = new Paddle(780, 400, 20, 100, 2);
+		setVisible(true);
+		player2 = new Paddle(0, 50, 20, 100, 2);
+
+		winner = 0;
+		win = false;
+		title = true;
+		reset = false;
+		score1 = 0;
+		score2 = 0;
+
+		randomWidth = (int) (Math.random() * 300);
+		randomHeight = (int) (Math.random() * 200);
+		ball = new Ball(20, 20, 20, 20, 2, 2);
+		setVisible(true);
+
+		// add to this array to increase key options
+		keys = new boolean[5];
+
+		// start listening for key press events
+		this.addKeyListener(this);
+		this.addMouseListener(this);
+
+		// starts a thread in the processor to help the game run smoothly
+		new Thread(this).start();
+	}
+
+	public void update(Graphics window) {
+
+		paint(window);
+	}
+
+	public void paint(Graphics window) {
+		if (title) {
+			// draw background
+			window.setColor(Color.GRAY);
+			window.fillRect(0, 0, 800, 600);
+
+			// draw title screen message
+			window.setColor(Color.WHITE);
+			Font welcome = new Font("Impact", Font.BOLD, 96);
+			window.setFont(welcome);
+			String welcomeMessage = "Welcome!";
+			window.drawString(welcomeMessage, 50, 100);
+
+			Font intstruction = new Font("Impact", Font.BOLD, 36);
+			window.setFont(intstruction);
+			String instructions = "Click the screen to continue. First to 10 wins!";
+			window.drawString(instructions, 60, 300);
+
+			Font rule = new Font("Impact", Font.PLAIN, 25);
+			window.setFont(rule);
+			String rules = "Use the \"W\" and \"S\" keys and the up and down arrows to move the paddles";
+			window.drawString(rules, 10, 350);
+
+		} else if (win) {
+
+			window.setColor(Color.BLACK);
+			window.fillRect(0, 0, 800, 600);
+
+			// draw title screen message
+			window.setColor(Color.WHITE);
+			Font welcome = new Font("Impact", Font.BOLD, 96);
+			window.setFont(welcome);
+			String welcomeMessage = "PLAYER " + winner + " WINS";
+			window.drawString(welcomeMessage, 50, 100);
+
+			Font intstruction = new Font("Impact", Font.BOLD, 36);
+			window.setFont(intstruction);
+			String instructions = "Click the screen to play again";
+			window.drawString(instructions, 25, 300);
+		} else {
+			if (reset) {
+				player1 = new Paddle(780, 50, 20, 100, 100);
+				setVisible(true);
+				player2 = new Paddle(0, 50, 20, 100, 100);
+
+				title = true;
+				reset = false;
+				score1 = 0;
+				score2 = 0;
+
+				randomWidth = (int) (Math.random() * 300);
+				randomHeight = (int) (Math.random() * 200);
+				ball = new Ball(50, 50, 50, 50, 100, 100);
+				setVisible(true);
+
+				// add to this array to increase key options
+				keys = new boolean[5];
+			}
+			// timer +=1;
+			// System.out.println(timer);
+
+			window.setColor(Color.WHITE);
+			window.fillRect(0, 0, 800, 600);
+			player2.draw(window);
+			player1.draw(window);
+			ball.draw(window);
+			/*
+			 * if(timer % 100 ==0){ moveImage(); }
+			 */
+
+			// draw score
+			String scoreText = "Score     " + score1 + "|" + score2;
+			Font welcome = new Font("Impact", Font.BOLD, 46);
+			window.setFont(welcome);
+			window.drawString(scoreText, 300, 50);
+
+			boolean BelowP1 = player1.getyPos() + player1.getHeight() <= 600;
+			boolean AboveP1 = player1.getyPos() >= 0;
+			boolean AboveP2 = player2.getyPos() >= 0;
+			boolean BelowP2 = player2.getyPos() + player2.getHeight() <= 600;
+			ball.moveBall(ball.getxPos(), ball.getyPos());
+
+			if (keys[0] == true && AboveP1) {
+				player1.move("UP");
+				canMove = true;
+			}
+			if (keys[1] == true && BelowP1) {
+				player1.move("DOWN");
+				canMove = true;
+			}
+			if (keys[2] == true && AboveP2) {
+				player2.move("UP");
+				canMove = true;
+			}
+			if (keys[3] == true && BelowP2) {
+				player2.move("DOWN");
+				canMove = true;
+			}
+			if (ball.getyPos() + ball.getHeight() == 600) {
+				ball.setYspeed(ball.getYspeed() * -1);
+			}
+			if (ball.getxPos() + ball.getWidth() == 800) {
+				// ball.setXspeed(ball.getXspeed()*-1);
+				score1 = score1 + 1;
+				ball.setxPos(50);
+				ball.setyPos(50);
+			}
+			if (ball.getxPos() == 0) {
+				score2 = score2 + 1;
+				ball.setXspeed(ball.getXspeed() * -1);
+				ball.setxPos(50);
+				ball.setyPos(50);
+			}
+			if (ball.getyPos() == 0) {
+				ball.setYspeed(ball.getYspeed() * -1);
+			}
+			if (ball.getxPos() + ball.getWidth() >= player1.getxPos()
+					&& ball.getyPos() <= player1.getyPos() + player1.getHeight()
+					&& ball.getyPos() + ball.getHeight() >= player1.getyPos()) {
+				ball.setXspeed(ball.getXspeed() * -1);
+			}
+			if (ball.getxPos() == player2.getxPos() + player2.getWidth()
+					&& ball.getyPos() <= player2.getyPos() + player2.getHeight()
+					&& ball.getyPos() + ball.getHeight() >= player2.getyPos()) {
+				ball.setXspeed(ball.getXspeed() * -1);
+			}
+			// repaint();
+		}
+		if (score1 == 10) {
+			winner = 1;
+			score1 = 0;
+			score2 = 0;
+			win = true;
+		} else if (score2 == 10) {
+			winner = 2;
+			score1 = 0;
+			score2 = 0;
+			win = true;
+		}
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+
+		// TODO Auto-generated method stub
+		if (e.getKeyCode() == KeyEvent.VK_UP) {
+			direction = "UP";
+			keys[0] = true;
+
+		}
+		if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+			direction = "DOWN";
+			keys[1] = true;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_W) {
+			direction = "UP";
+			keys[2] = true;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_S) {
+			direction = "DOWN";
+			keys[3] = true;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_R) {
+			reset = true;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_Q) {
+			System.exit(0);
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getKeyCode() == KeyEvent.VK_UP) {
+			direction = "";
+			keys[0] = false;
+
+		}
+		if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+			direction = "";
+			keys[1] = false;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_W) {
+			direction = "";
+			keys[2] = false;
+		}
+		if (e.getKeyCode() == KeyEvent.VK_S) {
+			direction = "";
+			keys[3] = false;
+		}
+		// repaint();
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		try {
+			while (true) {
+				Thread.currentThread().sleep(3);
+				repaint();
+			}
+		} catch (Exception e) {
+
+		}
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+		title = false;
+		win = false;
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
