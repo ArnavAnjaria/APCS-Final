@@ -71,7 +71,7 @@ public class PongArea extends JPanel implements ActionListener, KeyListener, Mou
 			window.fillRect(0, 0, 800, 600);
 
 			// draw title screen message
-			window.setColor(Color.RED);
+			window.setColor(Color.WHITE);
 			Font welcome = new Font("Impact", Font.BOLD, 96);
 			window.setFont(welcome);
 			String welcomeMessage = "Welcome!";
